@@ -17,13 +17,19 @@ export class QrcodeComponent implements OnInit {
     this.qrCodeService.getToken().subscribe({
       next:res => {
         console.log(res)
-        this.token=res.access_token;
-        this.qrCodeService.getQrCode(res.access_token).subscribe({
-          next:value => {
-            console.log(value)
-            this.qrcodeUrl=value.barcode_uri
-          }
-        })
+
+      },error: err => {
+        if (err.status === 403){
+          this.token=err.error.mfa_token;
+          console.log(err)
+          console.log(err.error.mfa_token)
+          this.qrCodeService.getQrCode(err.error.mfa_token).subscribe({
+            next:value => {
+              console.log(value)
+              this.qrcodeUrl=value.barcode_uri
+            }
+          })
+        }
       }
     })
   }
