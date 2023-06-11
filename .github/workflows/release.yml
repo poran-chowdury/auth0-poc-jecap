@@ -39,6 +39,13 @@ jobs:
         id: check_changes
         run: |
           git diff --quiet || echo "::set-output name=changes::true"
+      - name: Create Git tag
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+         echo "Enter the tag for the release:"
+         read -r tag
+         git tag "$tag"
+         git push origin "$tag"
 
       - name: Commit release notes
         if: steps.check_changes.outputs.changes == 'true'
