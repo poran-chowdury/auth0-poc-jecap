@@ -3,7 +3,7 @@ name: Create Release
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   release:
@@ -13,8 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-#      - name: Install GitHub CLI
-#        uses: github-actions/github-cli-setup@v2
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+          sudo apt-add-repository https://cli.github.com/packages
+          sudo apt update
+          sudo apt install gh
 
       - name: Get latest tag
         id: get_latest_tag
@@ -40,4 +44,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ steps.get_latest_tag.outputs.tag }} --title "Release ${{ steps.get_latest_tag.outputs.tag }}" --notes-file release_notes.md
+          echo "Enter the tag for the release:"
+          read -r tag
+          gh release create "$tag" --title "Release $tag" --notes-file release_notes.md
