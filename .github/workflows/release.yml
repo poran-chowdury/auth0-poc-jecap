@@ -22,6 +22,14 @@ jobs:
           sudo chmod 644 /etc/apt/sources.list.d/github-cli.list
           sudo apt update
           sudo apt install gh
+      - name: Create Git tag
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          latest_tag=$(echo "${{ steps.get_latest_tag.outputs.tag }}")
+          new_tag=$(echo "$latest_tag" | awk -F. -v OFS=. '{$NF = $NF + 1;} 1')
+          echo "New tag: $new_tag"
+          git tag "$new_tag"
+          git push origin "$new_tag"
 
       - name: Get latest tag
         id: get_latest_tag
@@ -34,18 +42,6 @@ jobs:
         run: |
           latest_tag=$(echo "${{ steps.get_latest_tag.outputs.tag }}")
           git log --pretty=format:"- %s" $latest_tag..HEAD > release_notes.md
-
-      - name: Check for changes
-        id: check_changes
-        run: |
-          git diff --quiet || echo "::set-output name=changes::true"
-      - name: Create Git tag
-        if: steps.check_changes.outputs.changes == 'true'
-        run: |
-         echo "Enter the tag for the release:"
-         read -r tag
-         git tag "$tag"
-         git push origin "$tag"
 
       - name: Commit release notes
         if: steps.check_changes.outputs.changes == 'true'
