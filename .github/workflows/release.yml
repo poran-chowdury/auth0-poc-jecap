@@ -22,14 +22,6 @@ jobs:
           sudo chmod 644 /etc/apt/sources.list.d/github-cli.list
           sudo apt update
           sudo apt install gh
-      - name: Create Git tag
-        if: steps.check_changes.outputs.changes == 'true'
-        run: |
-          latest_tag=$(echo "${{ steps.get_latest_tag.outputs.tag }}")
-          new_tag=$(echo "$latest_tag" | awk -F. -v OFS=. '{$NF = $NF + 1;} 1')
-          echo "New tag: $new_tag"
-          git tag "$new_tag"
-          git push origin "$new_tag"
 
       - name: Get latest tag
         id: get_latest_tag
@@ -51,6 +43,15 @@ jobs:
           git add release_notes.md
           git diff-index --quiet HEAD || git commit -m "Add release notes for version ${{ steps.get_latest_tag.outputs.tag }}"
           git push
+
+      - name: Create Git tag
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          latest_tag=$(echo "${{ steps.get_latest_tag.outputs.tag }}")
+          new_tag=$(echo "$latest_tag" | awk -F. -v OFS=. '{$NF = $NF + 1;} 1')
+          echo "New tag: $new_tag"
+          git tag "$new_tag"
+          git push origin "$new_tag"
 
       - name: Create release on GitHub
         env:
