@@ -3,7 +3,7 @@ name: Create Release
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   release:
@@ -32,16 +32,24 @@ jobs:
           latest_tag=$(echo "${{ steps.get_latest_tag.outputs.tag }}")
           git log --pretty=format:"- %s" $latest_tag..HEAD > release_notes.md
 
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git diff --quiet || echo "::set-output name=changes::true"
+
       - name: Commit release notes
+        if: steps.check_changes.outputs.changes == 'true'
         run: |
           git config --global user.name "${{ github.actor }}"
           git config --global user.email "${{ github.actor }}@users.noreply.github.com"
           git add release_notes.md
-          git commit -m "Add release notes for version ${{ steps.get_latest_tag.outputs.tag }}"
+          git diff-index --quiet HEAD || git commit -m "Add release notes for version ${{ steps.get_latest_tag.outputs.tag }}"
           git push
 
       - name: Create release on GitHub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ steps.get_latest_tag.outputs.tag }} --title "Release ${{ steps.get_latest_tag.outputs.tag }}" --notes-file release_notes.md
+          echo "Enter the tag for the release:"
+          read -r tag
+          gh release create "$tag" --title "Release $tag" --notes-file release_notes.md
