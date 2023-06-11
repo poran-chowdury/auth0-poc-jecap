@@ -1,0 +1,47 @@
+name: Create Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+          sudo apt-add-repository https://cli.github.com/packages
+          sudo apt update
+          sudo apt install gh
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          git fetch --tags
+          echo "::set-output name=tag::$(git describe --abbrev=0 --tags)"
+
+      - name: Generate release notes
+        id: generate_release_notes
+        run: |
+          latest_tag=$(echo "${{ steps.get_latest_tag.outputs.tag }}")
+          git log --pretty=format:"- %s" $latest_tag..HEAD > release_notes.md
+
+      - name: Commit release notes
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git add release_notes.md
+          git commit -m "Add release notes for version ${{ steps.get_latest_tag.outputs.tag }}"
+          git push
+
+      - name: Create release on GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ steps.get_latest_tag.outputs.tag }} --title "Release ${{ steps.get_latest_tag.outputs.tag }}" --notes-file release_notes.md
