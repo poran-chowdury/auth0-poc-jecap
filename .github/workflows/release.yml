@@ -3,7 +3,7 @@ name: Create Release
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   release:
@@ -15,11 +15,8 @@ jobs:
 
       - name: Install GitHub CLI
         run: |
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg --output /usr/share/keyrings/githubcli-archive-keyring.gpg
-          sudo gpg --dearmor /usr/share/keyrings/githubcli-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-          sudo chmod 644 /usr/share/keyrings/githubcli-archive-keyring.gpg
-          sudo chmod 644 /etc/apt/sources.list.d/github-cli.list
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+          sudo apt-add-repository https://cli.github.com/packages
           sudo apt update
           sudo apt install gh
 
@@ -35,7 +32,13 @@ jobs:
           latest_tag=$(echo "${{ steps.get_latest_tag.outputs.tag }}")
           git log --pretty=format:"- %s" $latest_tag..HEAD > release_notes.md
 
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git diff --quiet || echo "::set-output name=changes::true"
+
       - name: Commit release notes
+        if: steps.check_changes.outputs.changes == 'true'
         run: |
           git config --global user.name "${{ github.actor }}"
           git config --global user.email "${{ github.actor }}@users.noreply.github.com"
