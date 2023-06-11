@@ -13,8 +13,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install GitHub CLI
-        uses: github-actions/github-cli-setup@v2
+#      - name: Install GitHub CLI
+#        uses: github-actions/github-cli-setup@v2
 
       - name: Get latest tag
         id: get_latest_tag
