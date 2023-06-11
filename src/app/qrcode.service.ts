@@ -6,7 +6,7 @@ interface QrCodeResponse {
   authenticator_type: string,
   secret: string,
   barcode_uri: string,
-  mfa_token:string,
+  mfa_token: string,
 }
 
 @Injectable({
