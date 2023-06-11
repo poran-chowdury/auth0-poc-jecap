@@ -50,6 +50,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Enter the tag for the release:"
-          read -r tag
           gh release create "$tag" --title "Release $tag" --notes-file release_notes.md
